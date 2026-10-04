@@ -1,0 +1,29 @@
+{
+  "name": "ngx-seo-meta",
+  "version": "0.1.0",
+  "description": "Typed, SSR-ready Angular SEO: title, meta, Open Graph, Twitter Card, canonical, hreflang and JSON-LD — from routes or a service.",
+  "keywords": [
+    "angular",
+    "seo",
+    "meta-tags",
+    "open-graph",
+    "twitter-card",
+    "canonical",
+    "hreflang",
+    "json-ld",
+    "structured-data",
+    "ssr"
+  ],
+  "license": "MIT",
+  "author": "Marek Lewańczyk",
+  "peerDependencies": {
+    "@angular/common": "^20.0.0 || ^21.0.0",
+    "@angular/core": "^20.0.0 || ^21.0.0",
+    "@angular/platform-browser": "^20.0.0 || ^21.0.0",
+    "@angular/router": "^20.0.0 || ^21.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false
+}

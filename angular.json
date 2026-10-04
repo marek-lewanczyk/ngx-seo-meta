@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "packageManager": "npm",
+    "schematicCollections": ["angular-eslint"]
+  },
+  "newProjectRoot": "projects",
+  "projects": {
+    "ngx-seo-meta": {
+      "projectType": "library",
+      "root": "projects/ngx-seo-meta",
+      "sourceRoot": "projects/ngx-seo-meta/src",
+      "prefix": "seo",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ngx-seo-meta/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/ngx-seo-meta/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/ngx-seo-meta/tsconfig.spec.json"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/ngx-seo-meta/**/*.ts",
+              "projects/ngx-seo-meta/**/*.html"
+            ],
+            "eslintConfig": "projects/ngx-seo-meta/eslint.config.js"
+          }
+        }
+      }
+    }
+  }
+}
