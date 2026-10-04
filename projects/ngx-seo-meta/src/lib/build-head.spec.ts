@@ -175,4 +175,20 @@ describe('buildHead', () => {
     const head = buildHead({ extraTags: [{ name: 'theme-color', content: '#000' }] }, config);
     expect(head.tags.at(-1)).toEqual({ name: 'theme-color', content: '#000' });
   });
+
+  it('drops extra tags with invalid attribute names', () => {
+    const head = buildHead(
+      { extraTags: [{ name: 'ok', content: '1' }, { 'bad name': 'x', content: '2' }] },
+      config,
+    );
+    expect(head.tags.at(-1)).toEqual({ name: 'ok', content: '1' });
+    expect(head.tags.filter((tag) => tag['content'] === '2')).toEqual([]);
+    expect(head.issues).toEqual([{ level: 'warn', message: expect.stringContaining('invalid attribute name') }]);
+  });
+
+  it('accepts httpEquiv in extra tags', () => {
+    const head = buildHead({ extraTags: [{ httpEquiv: 'refresh', content: '30' }] }, config);
+    expect(head.tags.at(-1)).toEqual({ httpEquiv: 'refresh', content: '30' });
+    expect(head.issues).toEqual([]);
+  });
 });

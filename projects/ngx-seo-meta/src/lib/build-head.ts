@@ -26,6 +26,8 @@ export interface HeadModel {
   readonly issues: HeadIssue[];
 }
 
+const VALID_ATTRIBUTE_NAME = /^[A-Za-z_:][-A-Za-z0-9_:.]*$/;
+
 /** Computes the head for already merged metadata. Pure: no DOM access. */
 export function buildHead(metadata: SeoMetadata, config: SeoConfig): HeadModel {
   const tags: MetaDefinition[] = [];
@@ -132,7 +134,16 @@ export function buildHead(metadata: SeoMetadata, config: SeoConfig): HeadModel {
     }
   }
 
-  tags.push(...toArray(metadata.extraTags));
+  for (const tag of toArray(metadata.extraTags)) {
+    const valid = Object.keys(tag).every((key) =>
+      VALID_ATTRIBUTE_NAME.test(key === 'httpEquiv' ? 'http-equiv' : key),
+    );
+    if (valid) {
+      tags.push(tag);
+    } else {
+      issues.push({ level: 'warn', message: `Ignored extra tag with an invalid attribute name: ${JSON.stringify(tag)}` });
+    }
+  }
 
   return { title, tags, links, jsonLd, issues };
 }
