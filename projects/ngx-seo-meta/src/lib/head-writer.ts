@@ -63,10 +63,10 @@ export class HeadWriter {
   }
 
   private writeLinks(links: HeadLink[]): void {
-    const keys = new Set(links.map((link) => linkKey(link.rel, link.hreflang)));
+    const keys = new Set(links.map((link) => linkKey(link.rel, link.hreflang)).filter((key): key is string => key !== null));
     this.removeWhere(
       'link',
-      (el) => el.hasAttribute(SEO_MARKER) || keys.has(linkKey(el.getAttribute('rel'), el.getAttribute('hreflang'))),
+      (el) => el.hasAttribute(SEO_MARKER) || keys.has(linkKey(el.getAttribute('rel'), el.getAttribute('hreflang')) ?? ''),
     );
 
     for (const link of links) {

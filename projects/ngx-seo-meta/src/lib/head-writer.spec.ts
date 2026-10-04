@@ -83,6 +83,14 @@ describe('HeadWriter', () => {
     expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
   });
 
+  it('never removes foreign links when a model link has no managed key', () => {
+    addRaw('<link rel="icon" href="/favicon.ico">');
+
+    writer.write(model({ links: [{ rel: 'alternate', hreflang: '', href: 'https://example.com/x' }] }));
+
+    expect(document.head.querySelector('link[rel="icon"]')?.getAttribute('href')).toBe('/favicon.ico');
+  });
+
   it('writes JSON-LD scripts as text and leaves foreign ones alone', () => {
     addRaw('<script type="application/ld+json">{"foreign":true}</script>');
 
