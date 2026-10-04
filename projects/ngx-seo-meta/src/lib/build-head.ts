@@ -95,7 +95,12 @@ export function buildHead(metadata: SeoMetadata, config: SeoConfig): HeadModel {
 
   const product = metadata.product;
   if (product) {
-    property('product:price:amount', product.price.toFixed(2));
+    const amount = Number(product.price);
+    if (Number.isFinite(amount)) {
+      property('product:price:amount', amount.toFixed(2));
+    } else {
+      issues.push({ level: 'warn', message: `Ignored non-numeric product price: ${String(product.price)}` });
+    }
     property('product:price:currency', product.currency);
     property('product:availability', product.availability);
   }

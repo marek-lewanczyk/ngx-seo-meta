@@ -130,6 +130,19 @@ describe('buildHead', () => {
     expect(values(head, 'product:availability')).toEqual(['in stock']);
   });
 
+  it('accepts a numeric string price', () => {
+    const head = buildHead({ product: { price: '249' as unknown as number, currency: 'PLN' } }, config);
+    expect(values(head, 'product:price:amount')).toEqual(['249.00']);
+    expect(head.issues).toEqual([]);
+  });
+
+  it('skips and reports a non-numeric price', () => {
+    const head = buildHead({ product: { price: 'abc' as unknown as number, currency: 'PLN' } }, config);
+    expect(values(head, 'product:price:amount')).toEqual([]);
+    expect(values(head, 'product:price:currency')).toEqual(['PLN']);
+    expect(head.issues).toEqual([{ level: 'warn', message: expect.stringContaining('price') }]);
+  });
+
   it('renders locale, locale alternates and hreflang links', () => {
     const head = buildHead(
       {
