@@ -110,19 +110,27 @@ type JsonLd = Record<string, unknown>;
 
 ```ts
 class SeoService {
-  /** Replaces page metadata; result = merge(defaults, metadata). */
+  /** Replaces the component layer; route layer and defaults stay underneath. */
   update(metadata: SeoMetadata): void;
-  /** Merges into the current page metadata and re-renders. */
+  /** Merges into the component layer and re-renders. */
   patch(metadata: SeoMetadata): void;
+  /** @internal Used by withRouteSeo(); sets the route layer and clears the component layer. */
+  ɵsetRouteMetadata(metadata: SeoMetadata): void;
 }
 ```
 
+The service keeps two layers (both without defaults):
+
+- **route layer** — set only by `withRouteSeo()` at `ResolveEnd` through the internal `ɵsetRouteMetadata`,
+  which also resets the component layer to `{}`; stays `{}` without `withRouteSeo()`;
+- **component layer** (`page`) — `update(m)`: `page = m`; `patch(p)`: `page = merge(page, p, 'replace')`.
+
+Render formula: `merge(defaults, merge(route, page, 'replace'), 'concat')` — component fields override route fields,
+component `jsonLd` replaces route `jsonLd`, default `jsonLd` is always concatenated.
+
 ## Merge rules (`mergeMetadata`, pure)
 
-The service keeps **page metadata** (without defaults). Rendering always uses `merge(defaults, page)`.
-
-- `update(m)`: `page = m`.
-- `patch(p)`: `page = merge(page, p)`.
+Rendering uses `merge(defaults, merge(route, page, 'replace'), 'concat')` (see Service).
 - `merge(base, over)`:
   - scalar and array fields: `over` wins when the key is present (`undefined` = absent, `null` = clear);
   - `image` given as string is normalised to `{ url }`; `image` always **replaces** as a whole
@@ -149,11 +157,11 @@ A field that is `undefined` or `null` produces no tag.
 | `twitter.card` | default `summary_large_image` with image, `summary` without |
 | `twitter.site/creator` | `twitter:site`, `twitter:creator` |
 | `article` | `article:published_time`, `article:modified_time`, `article:author` (one per entry), `article:section`, `article:tag` (one per entry) |
-| `product` | `product:price:amount` (`toFixed(2)`), `product:price:currency`, `product:availability` |
+| `product` | `product:price:amount` (`Number(price).toFixed(2)`; non-numeric → skipped with a warning), `product:price:currency`, `product:availability` |
 | `locale`, `localeAlternates` | `og:locale`, `og:locale:alternate` (one per entry) |
 | `alternates` | `<link rel="alternate" hreflang="…" href="…">` (absolute) |
 | `jsonLd` | one serialized string per object |
-| `extraTags` | appended as given |
+| `extraTags` | appended as given; tags with an invalid attribute name are skipped with a warning |
 
 ## Writing to the DOM (`HeadWriter`)
 
@@ -177,11 +185,12 @@ Stateless with respect to memory — ownership is stored in the DOM, so it survi
   Order is therefore always: route SEO is applied → component may override in its constructor or a later `effect()`.
 - Source: `data['seo']` of the deepest primary route snapshot (Angular's `data` inheritance covers empty-path parents).
   Works for static `data: { seo }` and for `resolve: { seo: resolverFn }`.
-- Calls `update()` with:
+- Calls the internal `seo.ɵsetRouteMetadata()` (route layer; clears the component layer) with:
   - `title`: `data.seo.title` ?? the route's own `title` (`snapshot.title`);
   - `url` (when `canonical !== false` and `data.seo.url` is absent): `urlAfterRedirects` without query and fragment;
   - everything else from `data.seo`.
-- A route without `data.seo` still triggers `update()`, so the previous page's tags are replaced by defaults.
+- A route without `data.seo` still sets the route layer, so the previous page's tags are replaced by defaults plus the route `title` and derived canonical URL.
+- Components override route fields with `update()`/`patch()` on the component layer; route canonical, `og:url` and resolver data stay unless overridden.
 - Provides `SeoTitleStrategy` (no-op) in place of Angular's `TitleStrategy`, so route `title` does not overwrite the templated title.
 - Known limitation (documented): if a navigation is cancelled after `ResolveEnd`, tags reflect the cancelled target until the next navigation.
 
