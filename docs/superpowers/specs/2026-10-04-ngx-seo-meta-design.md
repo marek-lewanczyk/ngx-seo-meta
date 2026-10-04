@@ -35,7 +35,7 @@ projects/ngx-seo-meta/src/
     config.ts          SeoConfig, provideSeo(), SEO_CONFIG (internal)
     types.ts           SeoMetadata and related types
     merge.ts           mergeMetadata() — pure
-    build-tags.ts      buildHead() — pure: metadata + config -> tags, links, json-ld
+    build-head.ts      buildHead() — pure: metadata + config -> tags, links, json-ld
     url.ts             toAbsoluteUrl() — pure, http/https only
     head-writer.ts     writes the computed head into DOCUMENT, owns cleanup
     json-ld.ts         serializeJsonLd() — pure, escaping
@@ -131,7 +131,7 @@ The service keeps **page metadata** (without defaults). Rendering always uses `m
   - exception — `jsonLd` when merging **defaults with page**: concatenated (defaults first),
     so a default `Organization` coexists with a page `Product`. Within `patch`, `jsonLd` replaces.
 
-## Rendering (`buildHead`, pure)
+## Rendering (`buildHead` in `build-head.ts`, pure)
 
 Input: merged metadata + config. Output: `{ title, tags: MetaDefinition[], links, jsonLd: string[] }`.
 A field that is `undefined` or `null` produces no tag.
