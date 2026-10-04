@@ -15,6 +15,10 @@ describe('buildHead', () => {
     expect(values(head, 'twitter:title')).toEqual(['Page']);
   });
 
+  it('keeps $ patterns in templated titles literal', () => {
+    expect(buildHead({ title: 'Sale $$ off $&' }, config).title).toBe('Sale $$ off $& · Example');
+  });
+
   it('skips the template when titleTemplate is false', () => {
     expect(buildHead({ title: 'Home', titleTemplate: false }, config).title).toBe('Home');
   });
@@ -71,6 +75,13 @@ describe('buildHead', () => {
     expect(values(head, 'og:image:width')).toEqual([]);
     expect(values(head, 'twitter:image')).toEqual(['https://example.com/a.jpg']);
     expect(values(head, 'twitter:card')).toEqual(['summary_large_image']);
+  });
+
+  it('renders no image tags for an empty image url', () => {
+    const head = buildHead({ image: '' }, config);
+    expect(values(head, 'og:image')).toEqual([]);
+    expect(values(head, 'twitter:card')).toEqual(['summary']);
+    expect(head.issues).toEqual([]);
   });
 
   it('renders full image data', () => {

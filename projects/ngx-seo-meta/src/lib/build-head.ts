@@ -51,7 +51,7 @@ export function buildHead(metadata: SeoMetadata, config: SeoConfig): HeadModel {
   const title = !rawTitle
     ? config.siteName
     : metadata.titleTemplate !== false && config.titleTemplate
-      ? config.titleTemplate.replace('%s', rawTitle)
+      ? config.titleTemplate.replace('%s', () => rawTitle)
       : rawTitle;
 
   name('description', metadata.description);
@@ -76,7 +76,7 @@ export function buildHead(metadata: SeoMetadata, config: SeoConfig): HeadModel {
   }
 
   const image = normalizeImage(metadata.image);
-  const imageUrl = image ? absolute(image.url, 'image') : null;
+  const imageUrl = image?.url ? absolute(image.url, 'image') : null;
   if (image && imageUrl) {
     property('og:image', imageUrl);
     property('og:image:alt', image.alt);
