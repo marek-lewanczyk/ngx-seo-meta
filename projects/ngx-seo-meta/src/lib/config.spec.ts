@@ -20,9 +20,21 @@ describe('provideSeo', () => {
     expect(TestBed.inject(SEO_CONFIG).baseUrl).toBe('https://tenant.example.com');
   });
 
-  it.each(['/relative', 'example.com', 'ftp://example.com'])('rejects baseUrl %s', (baseUrl) => {
+  it.each([
+    '/relative',
+    'example.com',
+    'ftp://example.com',
+    'https://example.com/app',
+    'https://example.com/?x=1',
+    'https://example.com/#a',
+  ])('rejects baseUrl %s', (baseUrl) => {
     TestBed.configureTestingModule({ providers: [provideSeo({ baseUrl, siteName: 'X' })] });
     expect(() => TestBed.inject(SEO_CONFIG)).toThrowError(/\[ngx-seo-meta\].*baseUrl/);
+  });
+
+  it('accepts an origin with a trailing slash', () => {
+    TestBed.configureTestingModule({ providers: [provideSeo({ baseUrl: 'https://example.com/', siteName: 'X' })] });
+    expect(TestBed.inject(SEO_CONFIG).baseUrl).toBe('https://example.com/');
   });
 
   it('includes providers of features', () => {

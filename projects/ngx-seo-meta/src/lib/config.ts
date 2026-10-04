@@ -21,15 +21,20 @@ export interface SeoFeature {
 export const SEO_CONFIG = new InjectionToken<SeoConfig>('ngx-seo-meta config');
 
 function validateConfig(config: SeoConfig): SeoConfig {
-  let protocol: string | null;
+  let url: URL | null;
   try {
-    protocol = new URL(config.baseUrl).protocol;
+    url = new URL(config.baseUrl);
   } catch {
-    protocol = null;
+    url = null;
   }
-  if (protocol !== 'http:' && protocol !== 'https:') {
+  if (url?.protocol !== 'http:' && url?.protocol !== 'https:') {
     throw new Error(
       `[ngx-seo-meta] config.baseUrl must be an absolute http(s) URL, got "${config.baseUrl}".`,
+    );
+  }
+  if (url.pathname !== '/' || url.search !== '' || url.hash !== '') {
+    throw new Error(
+      `[ngx-seo-meta] config.baseUrl must be an origin such as "https://example.com" (no path, query or hash), got "${config.baseUrl}".`,
     );
   }
   return config;
