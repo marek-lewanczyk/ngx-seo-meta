@@ -4,11 +4,9 @@ const ESCAPES: Record<string, string> = {
   '<': '\\u003c',
   '>': '\\u003e',
   '&': '\\u0026',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029',
 };
-
-// Add Unicode characters dynamically to avoid parsing issues
-ESCAPES[String.fromCharCode(0x2028)] = '\\u2028';
-ESCAPES[String.fromCharCode(0x2029)] = '\\u2029';
 
 /**
  * Serializes JSON-LD so it is safe inside `<script type="application/ld+json">`.
@@ -24,8 +22,5 @@ export function serializeJsonLd(value: JsonLd): string | null {
   if (json === undefined) {
     return null;
   }
-  const ls = String.fromCharCode(0x2028);
-  const ps = String.fromCharCode(0x2029);
-  const regex = new RegExp('[<>&' + ls + ps + ']', 'g');
-  return json.replace(regex, (char) => ESCAPES[char] || char);
+  return json.replace(/[<>&\u2028\u2029]/g, (char) => ESCAPES[char]);
 }
