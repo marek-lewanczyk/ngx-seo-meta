@@ -48,7 +48,7 @@ export function withRouteSeo(options: RouteSeoOptions = {}): SeoFeature {
         const seo = inject(SeoService);
         const subscription = router.events.subscribe((event) => {
           if (event instanceof ResolveEnd) {
-            seo.update(routeMetadata(event, options));
+            seo.ɵsetRouteMetadata(routeMetadata(event, options));
           }
         });
         inject(DestroyRef).onDestroy(() => subscription.unsubscribe());

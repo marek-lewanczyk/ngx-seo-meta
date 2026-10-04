@@ -25,6 +25,11 @@ const routes: Routes = [
   { path: 'plain', component: Blank },
   { path: 'override', component: Overriding, data: { seo: { title: 'From route' } } },
   { path: 'own-url', component: Blank, data: { seo: { url: '/custom' } } },
+  {
+    path: 'resolved-product',
+    component: Overriding,
+    resolve: { seo: () => ({ title: 'Resolved', jsonLd: { '@type': 'Product' } }) },
+  },
 ];
 
 const config: SeoConfig = {
@@ -87,6 +92,27 @@ describe('withRouteSeo', () => {
     await harness.navigateByUrl('/override');
 
     expect(document.title).toBe('From component · Example');
+    expect(canonical()).toBe('https://example.com/override');
+    expect(content('og:url')).toBe('https://example.com/override');
+  });
+
+  it('keeps resolver data under the component layer', async () => {
+    await setup();
+    await harness.navigateByUrl('/resolved-product');
+
+    const types = Array.from(document.head.querySelectorAll('script[type="application/ld+json"]')).map(
+      (el) => (JSON.parse(el.textContent ?? '{}') as { '@type'?: string })['@type'],
+    );
+    expect(types).toContain('Product');
+    expect(document.title).toBe('From component · Example');
+  });
+
+  it('does not leak the component layer into the next navigation', async () => {
+    await setup();
+    await harness.navigateByUrl('/override');
+    await harness.navigateByUrl('/plain');
+
+    expect(document.title).toBe('Example');
   });
 
   it('derives canonical from the URL without query and fragment', async () => {

@@ -14,6 +14,7 @@ declare const ngDevMode: unknown;
 export class SeoService {
   private readonly config: SeoConfig;
   private readonly writer = inject(HeadWriter);
+  private route: SeoMetadata = {};
   private page: SeoMetadata = {};
 
   constructor() {
@@ -24,20 +25,30 @@ export class SeoService {
     this.config = config;
   }
 
-  /** Replaces the page metadata. Rendered result = defaults merged with `metadata`. */
+  /**
+   * Replaces the component-level metadata. Route metadata (from `withRouteSeo`) and defaults stay underneath:
+   * component fields override route fields, which override defaults.
+   */
   update(metadata: SeoMetadata): void {
     this.page = metadata;
     this.render();
   }
 
-  /** Merges `metadata` into the current page metadata (JSON-LD is replaced, not appended). */
+  /** Merges `metadata` into the current component-level metadata (JSON-LD is replaced, not appended). */
   patch(metadata: SeoMetadata): void {
     this.page = mergeMetadata(this.page, metadata, 'replace');
     this.render();
   }
 
+  /** @internal Used by withRouteSeo(); not part of the public API. */
+  ɵsetRouteMetadata(metadata: SeoMetadata): void {
+    this.route = metadata;
+    this.page = {};
+    this.render();
+  }
+
   private render(): void {
-    const merged = mergeMetadata(this.config.defaults ?? {}, this.page, 'concat');
+    const merged = mergeMetadata(this.config.defaults ?? {}, mergeMetadata(this.route, this.page, 'replace'), 'concat');
     const head = buildHead(merged, this.config);
 
     if (typeof ngDevMode === 'undefined' || ngDevMode) {
