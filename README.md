@@ -1,59 +1,113 @@
-# NgxSeoMeta
+# ngx-seo-meta
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.6.
+Typed, SSR-ready SEO for Angular: document title, meta tags, Open Graph, Twitter Card, canonical and `hreflang` links, and JSON-LD — set from route data or from a service.
 
-## Development server
+- Works with SSR, prerendering, hydration and zoneless apps
+- Cleans up after every navigation — no stale tags from the previous page
+- JSON-LD is escaped; only `http(s)` URLs are accepted
+- Angular 20 and 21
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Install
 
 ```bash
-ng generate component component-name
+npm install ngx-seo-meta
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Setup
 
-```bash
-ng generate --help
+```ts
+import { provideSeo, withRouteSeo } from 'ngx-seo-meta';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideSeo(
+      {
+        baseUrl: 'https://example.com',
+        siteName: 'Example',
+        titleTemplate: '%s · Example',
+        defaults: {
+          description: 'What the site is about.',
+          locale: 'en_US',
+          image: { url: '/og/default.jpg', alt: 'Example logo on a dark background', width: 1200, height: 630 },
+          twitter: { site: '@example' },
+          jsonLd: { '@context': 'https://schema.org', '@type': 'Organization', name: 'Example', url: 'https://example.com' },
+        },
+      },
+      withRouteSeo(),
+    ),
+  ],
+};
 ```
 
-## Building
+The config may also be a factory running in an injection context:
 
-To build the project run:
-
-```bash
-ng build
+```ts
+provideSeo(() => ({ baseUrl: inject(SITE_URL), siteName: 'Example' }));
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Route data
 
-## Running unit tests
+```ts
+export const routes: Routes = [
+  { path: '', component: Home, data: { seo: { title: 'Example — Home', titleTemplate: false } } },
+  { path: 'about', component: About, title: 'About us' }, // route title is used and templated
+  { path: 'products/:id', component: Product, resolve: { seo: productSeoResolver } },
+  { path: '**', component: NotFound, data: { seo: { title: 'Not found', robots: 'noindex, follow' } } },
+];
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
+export const productSeoResolver: ResolveFn<SeoMetadata> = (route) =>
+  inject(ProductApi).get(route.paramMap.get('id')!).pipe(
+    map((p) => ({
+      title: p.name,
+      description: p.summary,
+      image: { url: p.imageUrl, alt: p.imageAlt },
+      product: { price: p.price, currency: 'EUR', availability: p.stock > 0 ? 'in stock' : 'out of stock' },
+      jsonLd: { '@context': 'https://schema.org', '@type': 'Product', name: p.name },
+    })),
+  );
 ```
 
-## Running end-to-end tests
+`withRouteSeo()` applies `data.seo` at `ResolveEnd` (before components are created). Without `data.seo` it resets to `defaults`. The canonical URL is derived from the router URL without query and fragment; disable with `withRouteSeo({ canonical: false })`.
 
-For end-to-end (e2e) testing, run:
+## Service
 
-```bash
-ng e2e
+```ts
+const seo = inject(SeoService);
+
+seo.update({ title: 'Product', description: '…' }); // replaces page metadata
+seo.patch({ image: { url: '/p.jpg', alt: '…' } });  // merges into page metadata
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+When both are used, a component's `update()` / `patch()` runs after the route data and wins.
 
-## Additional Resources
+## Merge rules
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- Rendered metadata = `defaults` merged with page metadata.
+- `undefined` means "not set"; `null` clears a default (e.g. `image: null`).
+- `twitter`, `article`, `product` merge one level deep; `image` replaces as a whole.
+- `jsonLd` from defaults and page are combined; within `patch()` page JSON-LD is replaced.
+
+## Rendered tags
+
+| Field | Output |
+|---|---|
+| `title` | `<title>` (templated), `og:title`, `twitter:title` |
+| `description` | `description`, `og:description`, `twitter:description` |
+| `url` | `og:url`, `<link rel="canonical">` |
+| `image` | `og:image`, `og:image:alt`, `og:image:width/height`, `twitter:image`, `twitter:image:alt` |
+| `type` | `og:type` (inferred: `product` → `article` → `website`) |
+| `article` | `article:published_time`, `modified_time`, `author`, `section`, `tag` |
+| `product` | `product:price:amount`, `product:price:currency`, `product:availability` |
+| `robots`, `author` | `robots`, `author` |
+| `twitter` | `twitter:card`, `twitter:site`, `twitter:creator` |
+| `locale`, `localeAlternates` | `og:locale`, `og:locale:alternate` |
+| `alternates` | `<link rel="alternate" hreflang>` |
+| `jsonLd` | `<script type="application/ld+json">` per item |
+| `extraTags` | any meta tag, as given |
+
+Every element created by the library carries `data-ngx-seo`. Tags it does not manage are never touched; an unmarked tag with the same key (e.g. a static `description` in `index.html`) is replaced.
+
+## License
+
+MIT

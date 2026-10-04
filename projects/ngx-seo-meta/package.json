@@ -25,5 +25,13 @@
   "dependencies": {
     "tslib": "^2.3.0"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marek-lewanczyk/ngx-seo-meta.git"
+  },
+  "homepage": "https://github.com/marek-lewanczyk/ngx-seo-meta#readme",
+  "bugs": {
+    "url": "https://github.com/marek-lewanczyk/ngx-seo-meta/issues"
+  }
 }
