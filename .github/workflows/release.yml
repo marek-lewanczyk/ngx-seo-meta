@@ -24,7 +24,7 @@ jobs:
       - run: npx ng lint
       - run: npx ng test ngx-seo-meta --watch=false
       - run: npx ng build ngx-seo-meta
-      - run: npm publish --provenance --access public
+      # Trusted Publishing (OIDC) needs npm >= 11.5.1; provenance is generated automatically.
+      - run: npm install -g npm@latest
+      - run: npm publish --access public
         working-directory: dist/ngx-seo-meta
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
