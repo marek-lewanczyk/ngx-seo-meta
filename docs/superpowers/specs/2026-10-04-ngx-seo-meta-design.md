@@ -125,8 +125,9 @@ The service keeps **page metadata** (without defaults). Rendering always uses `m
 - `patch(p)`: `page = merge(page, p)`.
 - `merge(base, over)`:
   - scalar and array fields: `over` wins when the key is present (`undefined` = absent, `null` = clear);
-  - `image` given as string is normalised to `{ url }` first;
-  - objects `image`, `twitter`, `article`, `product`: merged one level deep;
+  - `image` given as string is normalised to `{ url }`; `image` always **replaces** as a whole
+    (alt text and dimensions describe one specific image, so they must not leak from a default image);
+  - objects `twitter`, `article`, `product`: merged one level deep (`undefined` inner fields ignored);
   - exception — `jsonLd` when merging **defaults with page**: concatenated (defaults first),
     so a default `Organization` coexists with a page `Product`. Within `patch`, `jsonLd` replaces.
 
@@ -163,7 +164,7 @@ Stateless with respect to memory — ownership is stored in the DOM, so it survi
   1. remove every `meta[data-ngx-seo]`;
   2. for each key (`name` / `property`) in the new set, remove existing **unmarked** tags with that key
      (e.g. a static `description` in `index.html`), so no duplicates appear;
-  3. add the new tags (marked). Repeated keys (`article:tag`, `og:locale:alternate`) are allowed.
+  3. create the new tags with `document.createElement` (marked). Repeated keys (`article:tag`, `og:locale:alternate`) are allowed.
 - Links: same approach for `link[rel="canonical"]` and `link[rel="alternate"][hreflang]`.
 - JSON-LD: remove `script[type="application/ld+json"][data-ngx-seo]`, then append one script per item.
 - Tags whose keys the library does not render are never touched.
@@ -200,11 +201,11 @@ All warnings are wrapped in `ngDevMode` checks and tree-shaken from production b
 
 - JSON-LD: `JSON.stringify`, then escape `<`, `>`, `&`, U+2028, U+2029 as `\uXXXX`; inserted via `textContent`, never `innerHTML`.
 - URLs: only `http:` and `https:` accepted after resolution against `baseUrl`.
-- Meta content set as attributes via `Meta` (escaped by the renderer).
+- Meta and link attributes set via `setAttribute` (never HTML string concatenation).
 
 ## SSR
 
-- Only `DOCUMENT`, `Meta`, `Title`, `Router` — no `window`, no storage.
+- Only `DOCUMENT`, `Title`, `Router` — no `window`, no storage.
 - Server and client compute the same output; `data-ngx-seo` markers let the client clean server-rendered tags correctly.
 - Compatible with zoneless change detection and incremental hydration.
 
