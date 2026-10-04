@@ -22,7 +22,7 @@ Migrating SP2RYM to the package is a separate, later step (see "Out of scope").
 | v1 features | title template, robots, OG types incl. article/product, extra tags, JSON-LD, hreflang + locale alternates |
 | Config source | static object or factory run in an injection context |
 | Language | English for code, JSDoc, errors, README |
-| Angular support | peer deps `@angular/core`, `@angular/common`, `@angular/platform-browser`, `@angular/router`: `^20.0.0 \|\| ^21.0.0` |
+| Angular support | peer deps `@angular/core`, `@angular/common`, `@angular/platform-browser`, `@angular/router`: `^21.0.0` (20 to be added after CI verification) |
 
 ## Repository layout
 

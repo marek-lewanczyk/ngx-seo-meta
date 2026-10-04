@@ -5,7 +5,7 @@ Typed, SSR-ready SEO for Angular: document title, meta tags, Open Graph, Twitter
 - Works with SSR, prerendering, hydration and zoneless apps
 - Cleans up after every navigation — no stale tags from the previous page
 - JSON-LD is escaped; only `http(s)` URLs are accepted
-- Angular 20 and 21
+- Angular 21
 
 ## Install
 
